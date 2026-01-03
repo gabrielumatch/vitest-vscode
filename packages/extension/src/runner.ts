@@ -75,9 +75,7 @@ export class TestRunner extends vscode.Disposable {
           this.diagnostic?.deleteDiagnostic(uri)
         })
         log.verbose?.('Starting a test run because', ...files.map(f => this.relative(f)), 'triggered a watch rerun event')
-        console.warn('[ANTES] Vai chamar startTestRun com files:', files)
         this.startTestRun(files)
-        console.warn('[DEPOIS] Chamou startTestRun')
       }
     })
 
@@ -427,7 +425,6 @@ export class TestRunner extends vscode.Disposable {
   }
 
   private async startTestRun(files: string[], primaryRequest?: vscode.TestRunRequest) {
-    console.warn('CHEGOU AQUI PORRA!!!!')
     const request = primaryRequest || this.nonContinuousRequest || this.createContinuousRequest()
 
     if (!files.length) {
@@ -450,11 +447,6 @@ export class TestRunner extends vscode.Disposable {
       : this.relative(files[0])
 
     const run = this.testRun = this.controller.createTestRun(request, name)
-    console.warn('akiiiiiiiiiiiiiiiiiii')
-    console.warn('run test run:', run)
-    console.warn('run test run:', request)
-    console.warn('run test run:', name)
-
     this.testRunRequest = request
     this.testRunDefer = Promise.withResolvers()
     // run the next test when this one finished, or cancell or test runs if they were cancelled

@@ -168,7 +168,6 @@ export class ExtensionWorker implements ExtensionWorkerTransport {
     await this.vitest.initBrowserProviders?.()
 
     const specs = await this.resolveTestSpecs(specsOrPaths)
-    log('[PLAY BUTTON2] runTests called with specs:', specs, 'testNamePattern:', testNamePattern)
 
     await this.runTestFiles(specs, testNamePattern, !specsOrPaths)
 

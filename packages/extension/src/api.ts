@@ -175,22 +175,16 @@ export class VitestFolderAPI {
   }
 
   async runFiles(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
-    log.info('[PLAY BUTTON] runFiles called with specs:', specs, 'testNamePattern:', testNamePatern)
-
     const normalizedSpecs = normalizeSpecs(specs)
     const files = Array.isArray(normalizedSpecs)
       ? normalizedSpecs.map(s => typeof s === 'string' ? s : s[1]).filter(f => f)
       : []
 
-    // Build the encore test run command
     const fileArgs = files.map(f => `"${f}"`).join(' ')
     const testNameArg = testNamePatern ? `--testNamePattern "${testNamePatern}"` : ''
     const rootArg = `--root "${this.workspaceFolder.uri.fsPath}"`
     const command = `encore test run ${testNameArg} ${fileArgs} ${rootArg}`.trim()
 
-    log.info('[ENCORE] Running command in terminal:', command)
-
-    // Create or reuse a terminal
     const vscode = await import('vscode')
     let terminal = vscode.window.terminals.find(t => t.name === 'Encore Tests')
     if (!terminal) {
@@ -491,7 +485,6 @@ export interface ResolvedMeta {
 }
 
 function normalizeSpecs(specs?: string[] | ExtensionTestSpecification[]) {
-  console.warn('[PLAY BUTTON API]', 'Normalizing specs:', specs)
   if (!specs) {
     return specs
   }
