@@ -11,6 +11,7 @@ import type {
   WorkspaceProject,
 } from 'vitest/node'
 import type { WorkerWSEventEmitter } from '../../shared/src/emitter'
+import { log } from 'node:console'
 import EventEmitter from 'node:events'
 import { readFileSync } from 'node:fs'
 import mm from 'micromatch'
@@ -167,6 +168,7 @@ export class ExtensionWorker implements ExtensionWorkerTransport {
     await this.vitest.initBrowserProviders?.()
 
     const specs = await this.resolveTestSpecs(specsOrPaths)
+    log('[PLAY BUTTON2] runTests called with specs:', specs, 'testNamePattern:', testNamePattern)
 
     await this.runTestFiles(specs, testNamePattern, !specsOrPaths)
 

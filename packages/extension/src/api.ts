@@ -175,7 +175,42 @@ export class VitestFolderAPI {
   }
 
   async runFiles(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
-    await this.meta.rpc.runTests(normalizeSpecs(specs), testNamePatern)
+    log.info('[PLAY BUTTON] runFiles called with specs:', specs, 'testNamePattern:', testNamePatern)
+
+    // Use encore test run instead of vitest
+    const { spawn } = await import('node:child_process')
+    const normalizedSpecs = normalizeSpecs(specs)
+    log.info('[DEBUG] normalizedSpecs:', JSON.stringify(normalizedSpecs))
+
+    const files = Array.isArray(normalizedSpecs)
+      ? normalizedSpecs.map(s => typeof s === 'string' ? s : s[1]).filter(f => f) // s[1] is the file path
+      : []
+
+    log.info('[DEBUG] files array:', JSON.stringify(files))
+    log.info('[ENCORE] Running encore test run with files:', files)
+
+    const child = spawn('encore', ['test', 'run', ...files], {
+      cwd: this.workspaceFolder.uri.fsPath,
+      stdio: 'inherit',
+      shell: true,
+    })
+
+    return new Promise<void>((resolve, reject) => {
+      child.on('close', (code) => {
+        if (code === 0) {
+          log.info('[ENCORE] Test run completed successfully')
+          resolve()
+        }
+        else {
+          log.error('[ENCORE] Test run failed with code:', code)
+          reject(new Error(`encore test run exited with code ${code}`))
+        }
+      })
+      child.on('error', (err) => {
+        log.error('[ENCORE] Failed to start encore test run:', err)
+        reject(err)
+      })
+    })
   }
 
   async updateSnapshots(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
@@ -465,6 +500,7 @@ export interface ResolvedMeta {
 }
 
 function normalizeSpecs(specs?: string[] | ExtensionTestSpecification[]) {
+  console.warn('[PLAY BUTTON API]', 'Normalizing specs:', specs)
   if (!specs) {
     return specs
   }
