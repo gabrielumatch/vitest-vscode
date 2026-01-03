@@ -175,6 +175,10 @@ export class VitestFolderAPI {
   }
 
   async runFiles(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
+    // ORIGINAL
+    // await this.meta.rpc.runTests(normalizeSpecs(specs), testNamePatern)
+
+    // OURS
     const normalizedSpecs = normalizeSpecs(specs)
     const files = Array.isArray(normalizedSpecs)
       ? normalizedSpecs.map(s => typeof s === 'string' ? s : s[1]).filter(f => f)
