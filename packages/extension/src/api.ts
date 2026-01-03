@@ -177,40 +177,31 @@ export class VitestFolderAPI {
   async runFiles(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
     log.info('[PLAY BUTTON] runFiles called with specs:', specs, 'testNamePattern:', testNamePatern)
 
-    // Use encore test run instead of vitest
-    const { spawn } = await import('node:child_process')
     const normalizedSpecs = normalizeSpecs(specs)
-    log.info('[DEBUG] normalizedSpecs:', JSON.stringify(normalizedSpecs))
-
     const files = Array.isArray(normalizedSpecs)
-      ? normalizedSpecs.map(s => typeof s === 'string' ? s : s[1]).filter(f => f) // s[1] is the file path
+      ? normalizedSpecs.map(s => typeof s === 'string' ? s : s[1]).filter(f => f)
       : []
 
-    log.info('[DEBUG] files array:', JSON.stringify(files))
-    log.info('[ENCORE] Running encore test run with files:', files)
+    // Build the encore test run command
+    const fileArgs = files.map(f => `"${f}"`).join(' ')
+    const testNameArg = testNamePatern ? `--testNamePattern "${testNamePatern}"` : ''
+    const rootArg = `--root "${this.workspaceFolder.uri.fsPath}"`
+    const command = `encore test run ${testNameArg} ${fileArgs} ${rootArg}`.trim()
 
-    const child = spawn('encore', ['test', 'run', ...files], {
-      cwd: this.workspaceFolder.uri.fsPath,
-      stdio: 'inherit',
-      shell: true,
-    })
+    log.info('[ENCORE] Running command in terminal:', command)
 
-    return new Promise<void>((resolve, reject) => {
-      child.on('close', (code) => {
-        if (code === 0) {
-          log.info('[ENCORE] Test run completed successfully')
-          resolve()
-        }
-        else {
-          log.error('[ENCORE] Test run failed with code:', code)
-          reject(new Error(`encore test run exited with code ${code}`))
-        }
+    // Create or reuse a terminal
+    const vscode = await import('vscode')
+    let terminal = vscode.window.terminals.find(t => t.name === 'Encore Tests')
+    if (!terminal) {
+      terminal = vscode.window.createTerminal({
+        name: 'Encore Tests',
+        cwd: this.workspaceFolder.uri.fsPath,
       })
-      child.on('error', (err) => {
-        log.error('[ENCORE] Failed to start encore test run:', err)
-        reject(err)
-      })
-    })
+    }
+
+    terminal.show()
+    terminal.sendText(command)
   }
 
   async updateSnapshots(specs?: ExtensionTestSpecification[] | string[], testNamePatern?: string) {
